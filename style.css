@@ -1,0 +1,42 @@
+/* Use the GCD main site's regular font stack. */
+body {
+    font-family: -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+                 "Cantarell", "Fira Sans", "Droid Sans",
+                 "Helvetica Neue", sans-serif;
+    font-size: 100%;
+    font-size: 100%;
+}
+
+div#logo_box {
+    width: 100%;
+    color: white;
+    background-color: #66E;
+    border-radius: 10px;
+    padding: 10px 0px;
+}
+
+img#logo {
+    margin: auto;
+    display: block;
+}
+
+.inline_chart {
+    display: inline-block;
+    width: 45%;
+    vertical-align: top;
+}
+
+.side_text {
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
+}
+
+h1 {
+    text-align: center;
+    /* Let the div padding handle this to match the image top */
+    margin-bottom: 0px;
+    /* Don't have too much space between this and the image */
+    margin-top: 5px;
+}

@@ -4,63 +4,17 @@
     <script type="text/javascript"
             src="https://www.gstatic.com/charts/loader.js">
     </script>
-    <!-- script type="text/javascript" src="countries.js">
-    </script>
-    <script type="text/javascript" src="languages.js">
-    </script -->
     <script type="text/javascript" src="data.js">
     </script>
     <script type="text/javascript" src="survey.js">
     </script>
-    <style>
-      /* Use the GCD main site's regular font stack. */
-      body {
-        font-family: -apple-system, BlinkMacSystemFont,
-                     "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-                     "Cantarell", "Fira Sans", "Droid Sans",
-                     "Helvetica Neue", sans-serif;
-        font-size: 100%;
-        font-size: 100%;
-      }
-      div#logo_box {
-        width: 100%;
-        color: white;
-        background-color: #66E;
-        border-radius: 10px;
-        padding: 10px 0px;
-      }
-      img#logo {
-        margin: auto;
-        display: block;
-      }
-      .inline_chart {
-        display: inline-block;
-        width: 45%;
-        vertical-align: top;
-      }
-      .side_text {
-        display: inline-block;
-        width: 50%;
-        vertical-align: top;
-      }
-      h1 {
-        text-align: center;
-        /* Let the div padding handle this to match the image top */
-        margin-bottom: 0px;
-        /* Don't have too much space between this and the image */
-        margin-top: 5px;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div id="logo_box">
       <img id="logo" src="http://files1.comics.org//img/gcd_logo.png" />
       <h1>The Grand Comics Database: User Survey #1</h1>
     </div>
-    <div id="regions"></div>
-    <div id="european_countries"></div>
-    <div id="latin_countries"></div>
-    <div id="pacific_countries"></div>
     <div id="preference_by_social"></div>
     <div id="preference_by_age"></div>
     <h2>Introduction</h2>
@@ -102,28 +56,30 @@
     </ul>
     <p>Insights TBD</p>
 
-    <h2>Region Defintions</h2>
+    <h2>Geographic Statistics</h2>
     <p>
       I created several regions to prevent a lot of tiny slices while
       grouping things geographically.  Australia and New Zealand are
       grouped with the one respondent each from South Korea and the
       Philipines who both listed English as their only language.  I've
       labeled this the "Pacific Anglophone" region.
-
+    <p>
       The other regions are what you would expect, with the three
       largest country populations (U.S., U.K., and Canada) standing
       on their own.  Note that there is only one respondent in the
       "North Africa" region, an active indexer in Libya who indexes
       comics in Arabic.  Unlike with the Pacific Anglophone grouping,
       I decided not to put him in with Europe due to the language
-      difference.
+      difference.  There were no other respondents from Africa or Asia.
+    <p>
+      <strong>Note:</strong> You can see the values as percentages by
+      hovering over the pie slices.
 
-      There were no other respondents from Africa or Asia.
-    <div id="region_div" class="inline_chart"></div>
-    <div id="europe_div" class="inline_chart"></div>
-    <div id="latin_america_div" class="inline_chart"></div>
-    <div id="pacific_anglophone_div" class="inline_chart"></div>
-    </p>
+    <div id="regions" class="inline_chart"></div>
+    <div id="european_countries" class="inline_chart"></div>
+    <div id="latin_countries" class="inline_chart"></div>
+    <div id="pacific_countries" class="inline_chart"></div>
+
     <h2>Detailed Results</h2>
     <h2>Basic Demographics: Age and Gender</h2>
     <p class="side_text">

@@ -1,0 +1,165 @@
+<html>
+  <head>
+    <title>First Survey Report for the GCD</title>
+    <script type="text/javascript"
+            src="https://www.gstatic.com/charts/loader.js">
+    </script>
+    <!-- script type="text/javascript" src="countries.js">
+    </script>
+    <script type="text/javascript" src="languages.js">
+    </script -->
+    <script type="text/javascript" src="data.js">
+    </script>
+    <script type="text/javascript" src="survey.js">
+    </script>
+    <style>
+      /* Use the GCD main site's regular font stack. */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont,
+                     "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+                     "Cantarell", "Fira Sans", "Droid Sans",
+                     "Helvetica Neue", sans-serif;
+        font-size: 100%;
+        font-size: 100%;
+      }
+      div#logo_box {
+        width: 100%;
+        color: white;
+        background-color: #66E;
+        border-radius: 10px;
+        padding: 10px 0px;
+      }
+      img#logo {
+        margin: auto;
+        display: block;
+      }
+      .inline_chart {
+        display: inline-block;
+        width: 45%;
+        vertical-align: top;
+      }
+      .side_text {
+        display: inline-block;
+        width: 50%;
+        vertical-align: top;
+      }
+      h1 {
+        text-align: center;
+        /* Let the div padding handle this to match the image top */
+        margin-bottom: 0px;
+        /* Don't have too much space between this and the image */
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="logo_box">
+      <img id="logo" src="http://files1.comics.org//img/gcd_logo.png" />
+      <h1>The Grand Comics Database: User Survey #1</h1>
+    </div>
+    <div id="regions"></div>
+    <div id="european_countries"></div>
+    <div id="latin_countries"></div>
+    <div id="pacific_countries"></div>
+    <div id="preference_by_social"></div>
+    <div id="preference_by_age"></div>
+    <h2>Introduction</h2>
+    <p>
+      This document is the summary report for the first user
+      survey conducted by the Grand Comics Database (GCD).  The goal
+      of this survey was to get a basic reading on who visits the
+      GCD, why they visit, how involved they are with the community,
+      and a very general sense of how much they like the site.
+    </p>
+    <p>
+      In particular, the survey aimed to give a voice to the suspected
+      large majority of visitors who are not active on the organization's
+      mailing lists or Facebook group.
+    </p>
+    <h2>Caveats</h2>
+    <p>
+      This survey measures visitors who felt motivated to complete a survey
+      in English within a fairly short window during which it was open.
+      This may over- or under-represent various populations.
+      The language barrier is the most obvious, but for instance we are
+      probably seeing fewer respondents who prefer other sites to the GCD
+      simply because such visitors likely do not come here regularly.
+    </p>
+    <h2>Summary of Results</h2>
+    <ul>
+      <li> Nearly 70% of respondents do not follow or post to any mailing
+           lists or social media channel.
+      <li> Less than 10% actively post to either the lists or Facebook.
+      <li> Most GCD visitors prefer the GCD over other sites, although
+           a substantial minority use the GCD and other sites about
+           equally.
+      <li> Nearly all (98%) of our visitors are male.
+      <li> The majority are middle-aged (between 40 and 69).
+      <li> Nearly everyone who used the open comment box to ask for an
+           improvement asked for something related to search.
+      <li> Very few GCD users are only interested in recent comics,
+           and a few comments noted the GCD's weakness in this area.
+    </ul>
+    <p>Insights TBD</p>
+
+    <h2>Region Defintions</h2>
+    <p>
+      I created several regions to prevent a lot of tiny slices while
+      grouping things geographically.  Australia and New Zealand are
+      grouped with the one respondent each from South Korea and the
+      Philipines who both listed English as their only language.  I've
+      labeled this the "Pacific Anglophone" region.
+
+      The other regions are what you would expect, with the three
+      largest country populations (U.S., U.K., and Canada) standing
+      on their own.  Note that there is only one respondent in the
+      "North Africa" region, an active indexer in Libya who indexes
+      comics in Arabic.  Unlike with the Pacific Anglophone grouping,
+      I decided not to put him in with Europe due to the language
+      difference.
+
+      There were no other respondents from Africa or Asia.
+    <div id="region_div" class="inline_chart"></div>
+    <div id="europe_div" class="inline_chart"></div>
+    <div id="latin_america_div" class="inline_chart"></div>
+    <div id="pacific_anglophone_div" class="inline_chart"></div>
+    </p>
+    <h2>Detailed Results</h2>
+    <h2>Basic Demographics: Age and Gender</h2>
+    <p class="side_text">
+      Somewhat unsurprisingly, the majority of the GCD's audience consists
+      of middle-aged men.  What is surprising is that the audience is not
+      just majority male, but almost entirely male.  This holds true in
+      similar proportiong across nearly all significant-size user groups.
+    <div id="gender" class="inline_chart"></div>
+    <p class="side_text">
+      The one exception is that women make up 4.3% of visitors who come
+      to the GCD for academic or other research.  The sample size is so
+      small it is hard to say much, but it seems worthy of note.
+    </p>
+    <div id="research_gender" class="inline_chart"></div>
+    <p>
+      Age 
+    <h3>Community</h3>
+    <p>
+      The GCD conducts it's organizational business through several
+      mailing lists.  Additionally, the GCD's Facebook group provides
+      an alternative and generally less formal communication channel.
+    </p>
+    <div id="why_columns"></div>
+    <div id="preference_columns"></div>
+    <div id="dashboard">
+      <div id="filter_why"></div>
+      <div id="dynamic_why"></div>
+    </div>
+    <div id="why">
+      <div id="unfiltered_why" class="inline_chart"></div>
+      <div id="non_social_why" class="inline_chart"></div>
+      <div id="follow_why" class="inline_chart"></div>
+      <div id="active_why" class="inline_chart"></div>
+    </div>
+    <div id="basic_social_div"></div>
+    <div id="preferences_div"></div>
+    <div id="raw_table_div"></div>
+  </body>
+</html>

@@ -191,6 +191,9 @@ if __name__ == '__main__':
             sys.stderr.write('Unknown country: "%s"\n' % fields.country)
             row['country'] = 'zz'
 
+        # Set the region in the main data as we'll use it a lot.
+        row['region'] = REGIONS[row['country']]
+
         # ######### AGE
         # Pick the number in the middle of the decade ragnes just so that
         # we can use numbers here for things like selecting larger ranges.
@@ -233,21 +236,21 @@ if __name__ == '__main__':
     # This turns into our JavaScript data structure eventually.
     output = {}
 
-    region_counts = CountDataSet(rows, 'region',
-                                 lambda r: REGIONS[r['country']])
+    region_counts = CountDataSet(rows, 'region')
     region_table = region_counts.get_data_table()
-    output['Region'] = {
+    output['Visitors by Region or Frequent Country'] = {
         'target': 'regions',
         'data': region_table,
+        'type': 'pie',
     }
 
     for title, target, region in (('Europe by Country',
                                    'european_countries',
                                    'europe'),
-                                  ('Latin America by Countries',
+                                  ('Latin America by Country',
                                    'latin_countries',
                                    'latin america'),
-                                  ('Pacific Anglophone Countries',
+                                  ('Pacific Anglophone Country',
                                    'pacific_countries',
                                    'pacific anglophone')):
         country_counts = CountDataSet(rows, 'country')

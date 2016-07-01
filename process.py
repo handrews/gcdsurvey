@@ -7,13 +7,12 @@ import re
 import sys
 import codecs
 import json
-import collections
 import functools
 
 import gviz_api
 
 from support import (
-    Line, REGIONS, COUNTRIES, COUNTRIES_BY_CODE, LANGUAGES, LANGUAGES_BY_CODE,
+    Line, REGIONS, COUNTRIES, COUNTRIES_BY_CODE, LANGUAGES,
     GENDERS, WHY_LABELS, WHY_VALUES)
 from charts import make_label, CountDataSet, MultiCountDataSet
 
@@ -49,11 +48,10 @@ HEADER_TYPES = {h[0]: h[1] for h in HEADER_SPEC}
 if __name__ == '__main__':
     data = codecs.open('gcd-survey.tsv', encoding='utf-8')
     lines = data.readlines()
-    header = Line(*lines.pop(0).replace('\r', '').split('\t'))
-    # print(format_output_header(header))
 
-    # output_header = format_output_header(header)
-    # output_data = gviz_api.DataTable(output_header)
+    # Throw away the header line, as we build headers more suitable
+    # for charts instead.
+    Line(*lines.pop(0).replace('\r', '').split('\t'))
 
     rows = []
     for line in lines:
@@ -96,7 +94,7 @@ if __name__ == '__main__':
         # ######### PREFERRED
         # True means GCD preferred, False means GCD used only if other sites
         # fail, None means use GCD and other sites about equally.
-        # All of the "other" values can be mapped to these reasonablye
+        # All of the "other" values can be mapped to these reasonably
         # well, so we just do that.
         if fields.preferred.startswith('Yes, I use the GCD more'):
             row['preferred'] = True
@@ -114,8 +112,9 @@ if __name__ == '__main__':
         assert row['preferred'] is None or isinstance(row['preferred'], bool)
 
         # ######### SOCIAL
-        # Same general approach as with 'why', but we don't have to worry
-        # about embedded commas in the values this time.
+        # Each value, if present, is always in the same order.
+        # So just walk through all of them in order and flag
+        # them and move to the next value when we see a match.
         try:
             social = fields.social.split(', ')
             channel = social.pop(0).lower()
@@ -144,7 +143,8 @@ if __name__ == '__main__':
                 row['non_social'] = True
         except IndexError:
             # We've processed the whole thing and didn't use all fields,
-            # which is fine.
+            # which is to be expected as checking all of the boxes doesn't
+            # make sense.
             pass
 
         # ######### LANGUAGE
@@ -219,47 +219,20 @@ if __name__ == '__main__':
             # So just treat them all as "decline to state."
             row['gender'] = 'declined to state'
 
-        # output_line = format_output_line(fields)
-        # encoded = codecs.encode(output_line, 'utf-8')
-        # print(encoded)
-        # output_data.AppendData([output_line])
-
         rows.append(row)
 
-    # count_data = CountDataSet(rows, 'preferred')
-    # data_table = count_data.get_data_table(label_with=make_preference_label,
-    #     filters=collections.OrderedDict([
-    #         ('Non Social', lambda r: r['non_social']),
-    #         ('Social', lambda r: not r['non_social']),
-    #     ]))
-    # print("GCDSurveyData = %s" % data_table)
-          # json.dumps(json.loads(data_table.ToJSon()), indent=4))
+    make_social_label = functools.partial(make_label, label_map={
+        True: 'Non Social', False: 'Social'})
 
-    # make_social_label = functools.partial(make_label, label_map={
-    #     True: 'Non Social', False: 'Social'})
     make_preference_label = functools.partial(make_label, label_map={
         True: 'Prefers the GCD',
         None: 'Uses the GCD and other sites',
         False: 'Prefers other sites',
     })
 
-    # soc_counts = CountDataSet(rows, 'non_social')
-    # soc_table = soc_counts.get_data_table(label_with=make_social_label,
-    #     filters=collections.OrderedDict([
-    #         (make_preference_label(True), lambda r: r['preferred']),
-    #         (make_preference_label(None), lambda r: r ['preferred'] is None),
-    #         (make_preference_label(False), lambda r: r ['preferred'] is False),
-    #     ]))
-
-
-    # pref_counts = CountDataSet(rows, 'preferred')
-    # pref_table = pref_counts.get_data_table(label_with=make_preference_label,
-    #     filters=collections.OrderedDict([
-    #         ('Non Social', lambda r: r['non_social']),
-    #         ('Social', lambda r: not r['non_social']),
-    #     ]))
+    # This turns into our JavaScript data structure eventually.
     output = {}
-    
+
     region_counts = CountDataSet(rows, 'region',
                                  lambda r: REGIONS[r['country']])
     region_table = region_counts.get_data_table()
@@ -285,37 +258,29 @@ if __name__ == '__main__':
         output[title] = {'target': target,
                          'data': country_table,
                          'type': 'pie'}
+
     # Note: You cannot create lambdas in a loop, as they will all capture
-    # the final iteration value of the loop variable.
+    # the final iteration value of the loop variable.  Because closures.
     age_filters = [('All', lambda r: True)]
-    age_filters.append(('15', lambda r: r['age'] == 15))
-    age_filters.append(('25', lambda r: r['age'] == 25))
-    age_filters.append(('35', lambda r: r['age'] == 35))
-    age_filters.append(('45', lambda r: r['age'] == 45))
-    age_filters.append(('55', lambda r: r['age'] == 55))
-    age_filters.append(('65', lambda r: r['age'] == 65))
-    age_filters.append(('75', lambda r: r['age'] == 75))
-    foo = MultiCountDataSet(rows, 'preferred')
-    t = foo.get_data_table('Age', age_filters, label_with=make_preference_label)
-    sys.stderr.write('%r\n' % t)
+    age_filters.append(('< 40', lambda r: r['age'] < 40))
+    age_filters.append(('40+', lambda r: r['age'] >= 40))
+    pref_by_age_counts = MultiCountDataSet(rows, 'preferred')
+    pref_by_age_table = pref_by_age_counts.get_data_table(
+        'Age', age_filters, label_with=make_preference_label)
     output['Database Preference by Age'] = {'target': 'preference_by_age',
-                                            'data': t,
+                                            'data': pref_by_age_table,
                                             'type': 'stack'}
-                               
+
     print("GCDSurveyData = %s;" % json.dumps(output, indent=4))
 
-    import gviz_api
+    # Also make an entirely separate table of everything.
     dt = gviz_api.DataTable(HEADER_SPEC)
     processed_rows = []
     for r in rows:
         current_row = []
         for h in HEADER_SPEC:
-            d = r[h[0]]
-            current_row.append(d)
+            current_row.append(r[h[0]])
         processed_rows.append(current_row)
 
     dt.LoadData(processed_rows)
-    j = dt.ToJSon()
-    print("GCDRawData = %s;" % json.dumps(json.loads(j), indent=4))
-
-# ########################################################################
+    print("GCDRawData = %s;" % json.dumps(json.loads(dt.ToJSon()), indent=4))

@@ -3,10 +3,8 @@
 
 from __future__ import unicode_literals, print_function
 
-import sys
 import json
 import collections
-import functools
 
 import gviz_api
 
@@ -31,7 +29,6 @@ def make_label(value, label_map=None):
             label = value.replace('_', ' ').title()
         else:
             label = str(value)
-    # sys.stderr.write("'%r' -> '%s'\n" % (value, label))
     return label
 
 
@@ -56,18 +53,22 @@ def get_basic_reason(row):
 
 
 class MultiCountDataSet(GoogleDataSet):
+    # The data structure looks like this:
+    #
     # [[bucket type] [bucket 1] [bucket 2] [bucket 3]]
     # [[filter 1]    [f1b1    ] [f1b2    ] [f1b3    ]]
     # [[filter 2]    [f2b2    ] [f2b2    ] [f2b3    ]]
+    #
+    # Here is an example of the description row & col.
+    # This measures the reason, grouped four different
+    # ways by social medial / mailing list participation.
+    #
+    # [[Reason]      [Personal] [Research] [Interactive]]
+    # [[All]
+    # [[Non-Social]
+    # [[Followers]
+    # [[Active]
 
-    # [[Reason]      [personal] [research] [interact]]
-    # [[]
-    # [[non social]
-    # [[followers]
-    # [[active]
-
-    # MultiCountDataSet(dataset, 'Reason', 'Socialness',
-    #                   lambda r: r[
     def __init__(self, dataset,
                  count_column, column_callable=None):
         super(MultiCountDataSet, self).__init__(dataset)
@@ -78,43 +79,13 @@ class MultiCountDataSet(GoogleDataSet):
     # XXX: DUPLICATE from CountDataSet, inheritance or what?
     def _get_counts(self, filter_by):
         counts = collections.Counter()
-        # filtered_dataset = [r for r in self._raw_dataset if filter_by(r)]
-
-        # sys.stderr.write('\n%s\n\n' % '\n\n'.join(
-        #                  [repr(r)
-        #                   for r in self._raw_dataset
-        #                   if filter_by(r)]))
-        # sys.stderr.write('\n*************************\n%s\n\n' %
-        #                  '\n\nXXXXXXXX\n\n'.join(map(repr, filtered_dataset)))
-
-        # if self._column_callable:
-        #     counts.update([self._column_callable(r) for r in filtered_dataset])
-        # else:
-        #     counts.update([r[self._count_column] for r in filtered_dataset])
-
-        # raise Exception("Done!")
-
         for r in self._raw_dataset:
             if filter_by(r):
                 if self._column_callable:
                     v = self._column_callable(r)
-                    sys.stderr.write('\nCalculated: %r\n' % v)
                 else:
                     v = r[self._count_column]
-                    # sys.stderr.write('\n%s: %r\n' % (self._count_column, v))
                 counts.update((v,))
-                # sys.stderr.write('New count: %r\n\n' % counts[v])
-            else:
-                # sys.stderr.write('.')
-                pass
-
-        # counts.update([
-        #     # flake8 loses its mind on wraped ternary ifs, so turn it off.
-        #     self._column_callable(r) if self._column_callable    # noqa
-        #                              else r[self._count_column]  # noqa
-        #     for r in self._raw_dataset
-        #     if filter_by(r)
-        # ])
         return counts
 
     def get_data_table(self,
@@ -124,7 +95,7 @@ class MultiCountDataSet(GoogleDataSet):
                        label_with=make_label):
 
         # We just assume that these all fit together b/c this is not
-        # actuall a general purpose library for the public.
+        # actually a general purpose library for the public.
         counts = [self._get_counts(f[1]) for f in filters]
 
         # For each set of counts, we will want a count for every key that
@@ -138,18 +109,19 @@ class MultiCountDataSet(GoogleDataSet):
                                  [c.viewkeys() for c in counts]),
                           sort_by)
 
+        # Chart column labels (which label rows in the DataTable)
+        # are strings.
         header = [(filter_type_name, 'string')]
+
+        # Chart values (the actual counts) are numbers.
         header.extend([(label_with(k), 'number') for k in all_keys])
+
         table = []
-        spec = [('age', 'string')]
-        spec.extend([('count', 'number') for x in xrange(len(all_keys))])
         for f, count in zip(filters, counts):
             row = [f[0]]
             row.extend([count[k] for k in all_keys])
             table.append(row)
         return self._make_table(header, table)
-        # return self._make_table([('age', 'string'), ('count both', 'number'), ('count no', 'number'), ('count yes', 'number')], table)
-        # raise Exception('\n[%r]\n[%s]' % (header, '\n '.join([repr(r) for r in table])))
 
 
 class CountDataSet(GoogleDataSet):

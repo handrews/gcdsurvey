@@ -232,9 +232,21 @@ if __name__ == '__main__':
         None: 'Uses the GCD and other sites',
         False: 'Prefers other sites',
     })
+    make_gender_label = functools.partial(make_label, label_map={
+        'f': 'Female',
+        'm': 'Male',
+    })
 
     # This turns into our JavaScript data structure eventually.
     output = {}
+
+    gender_counts = CountDataSet(rows, 'gender')
+    gender_table = gender_counts.get_data_table(label_with=make_gender_label)
+    output['Visitors by Gender'] = {
+        'target': 'gender',
+        'data': gender_table,
+        'type': 'pie',
+    }
 
     region_counts = CountDataSet(rows, 'region')
     region_table = region_counts.get_data_table()
@@ -250,7 +262,7 @@ if __name__ == '__main__':
                                   ('Latin America by Country',
                                    'latin_countries',
                                    'latin america'),
-                                  ('Pacific Anglophone Country',
+                                  ('Pacific Anglophone by Country',
                                    'pacific_countries',
                                    'pacific anglophone')):
         country_counts = CountDataSet(rows, 'country')

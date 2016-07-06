@@ -12,7 +12,6 @@ function drawChart() {
     // See data.json for its definition.
     var rawData = GCDSurveyData;
 
-
     var chartConfig;
     var pie;
     var stack;

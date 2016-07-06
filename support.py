@@ -3,6 +3,9 @@
 
 from __future__ import unicode_literals, print_function
 
+import re
+import sys
+
 
 REGIONS = {
     'au': 'pacific anglophone',
@@ -549,9 +552,6 @@ WHY_LABELS = {
 
 
 class Line(object):
-    # This pretty much just exists to do some simple pre-parsing.
-    # At one point it had more of a purpose but it worked out that
-    # building the output data in a different structure was better.
     def __init__(self, ts, why, era, preferred, social, language, country,
                  age='', gender='', contact='', extra='',
                  pro='', search='', api='', todo='', digital='', con='',
@@ -581,3 +581,159 @@ class Line(object):
         self.characters = int(characters) if characters == '1' else ''
         self.site = int(site) if site == '1' else ''
         self.current = int(current) if current == '1' else ''
+
+    def process_why(self, row):
+        why = self.why.replace('comics, creators, publishers, etc.',
+                               'comics').split(', ')
+        v_index = 0
+        why_index = 0
+        while v_index < len(WHY_VALUES) and why_index < len(why):
+            if why[why_index] == WHY_VALUES[v_index]:
+                row[WHY_LABELS[WHY_VALUES[v_index]]] = True
+                why_index += 1
+            v_index += 1
+
+        if why_index < len(WHY_VALUES) - 1:
+            row['other_reason'] = ', '.join(why[why_index:])
+
+    def process_era(self, row):
+        if self.era.startswith('I am primarily interested in recent'):
+            row['recent'] = True
+            row['older'] = False
+        elif self.era.startswith('I am primarily interested in older'):
+            row['recent'] = False
+            row['older'] = True
+        else:
+            row['recent'] = True
+            row['older'] = True
+
+    def process_preferred(self, row):
+        # True means GCD preferred, False means GCD used only if other sites
+        # fail, None means use GCD and other sites about equally.
+        # All of the "other" values can be mapped to these reasonably
+        # well, so we just do that.
+        if self.preferred.startswith('Yes, I use the GCD more'):
+            row['preferred'] = True
+        elif self.preferred.startswith('No, I use the GCD and one or more') \
+                or self.preferred.lower().startswith('first'):
+            row['preferred'] = None
+        elif self.preferred.startswith('No, I only use the GCD if') or \
+                self.preferred == 'Atlas Tales':
+            row['preferred'] = False
+        elif 'GCD' in self.preferred:
+            # Need to do this last or else would catch standard "No" options
+            # But all of the nonstandard options with GCD in them are
+            # essentially positive responses.
+            row['preferred'] = True
+        assert row['preferred'] is None or isinstance(row['preferred'], bool)
+
+    def process_social(self, row):
+        # Each value, if present, is always in the same order.
+        # So just walk through all of them in order and flag
+        # them and move to the next value when we see a match.
+        try:
+            social = self.social.split(', ')
+            channel = social.pop(0).lower()
+            if 'but rarely if ever post' in channel:
+                row['follows_lists'] = True
+                channel = social.pop(0)
+            if 'post to at least one of the mailing' in channel:
+                row['posts_to_lists'] = True
+                channel = social.pop(0)
+            if 'i follow the gcd on facebook' in channel:
+                row['follows_fb'] = True
+                channel = social.pop(0)
+            if 'post to the gcd' in channel:
+                row['posts_to_fb'] = True
+                channel = social.pop(0)
+            if 'google' in channel:
+                row['follows_gplus'] = True
+                channel = social.pop(0)
+            if 'twitter' in channel:
+                row['follows_twitter'] = True
+                channel = social.pop(0)
+            if 'pinterest' in channel:
+                row['follows_pinterest'] = True
+                channel = social.pop(0)
+            if 'do not follow' in channel:
+                row['non_social'] = True
+        except IndexError:
+            # We've processed the whole thing and didn't use all self,
+            # which is to be expected as checking all of the boxes doesn't
+            # make sense.
+            pass
+
+    def process_languages(self, row):
+        # Remove complicated stuff that people put in.
+        # And yes, there's an extra 'a' in a hilarious location in one of
+        # the 'occasionally' instances.  And yes, it's hilarious because
+        # mentally I'm apparently 12.
+        self.language = re.sub(
+            (r"sometimes|rarely|occasioa?nally|almost|but| in |attempt|some|"
+             r"exclusively| or[ /]| and|and |doesn't|matter|; i own|other|"
+             r"languages?|i can read, art is a universal "),
+            ' ', self.language)
+
+        # All language names are one word, so normalize all punctuation
+        # and spacing to a comma-separated list.  A few "two word" entries
+        # are just synonyms, so they'll get added to the set twice which
+        # is harmless.  Because set.
+        self.language = re.sub(r'[ /,.&;)(]+', ', ', self.language)
+        language_set = set()
+        for lang in map(lambda x: x.strip(' .'), self.language.split(', ')):
+            # The keys in LANGUAGES are tuples of names, so we have to look
+            # for the data in the tuple rather than just checking equality.
+            for lang_names in LANGUAGES:
+                if lang in lang_names:
+                    language_set.add(LANGUAGES[lang_names])
+                    break
+            # This else goes with the for- it executes if we did *NOT*
+            # find a matching language, and therefore never did a 'break'
+            else:
+                sys.stderr.write('Unknown language: "%s"\n' % lang)
+                language_set.add('zz')
+        row['languages'] = ', '.join(language_set)
+
+    def process_country(self, row):
+        # The keys in COUNTRIES are tuples of names, so we have to
+        # look for the data in the tuple rather than just checking equality.
+        for country_names in COUNTRIES:
+            if self.country in country_names:
+                row['country'] = COUNTRIES[country_names]
+                break
+        # This else goes with the for- it executes if we did *NOT*
+        # find a matching country, and therefore never did a 'break'
+        else:
+            sys.stderr.write('Unknown country: "%s"\n' % self.country)
+            row['country'] = 'zz'
+
+        # Set the region in the main data as we'll use it a lot.
+        row['region'] = REGIONS[row['country']]
+
+    def process_age(self, row):
+        # Pick the number in the middle of the decade ragnes just so that
+        # we can use numbers here for things like selecting larger ranges.
+        if self.age == '':
+            row['age'] = None
+        elif '<' in self.age:
+            row['age'] = 15
+        else:
+            try:
+                row['age'] = int(self.age[0:2]) + 5
+            except ValueError:
+                raise ValueError("Could not parse age: '%r'" % self.age)
+
+        assert row['age'] is None or isinstance(row['age'], int)
+
+    def process_gender(self, row):
+        if self.gender in GENDERS['m']:
+            row['gender'] = 'm'
+        elif self.gender in GENDERS['f']:
+            row['gender'] = 'f'
+        else:
+            # None of the other values are actionable- they all seem to be
+            # either mistakes (age or, um... genre? in the field) or people
+            # just being amusing ("earthling" is the closest thing to an
+            # actual alternative gender that anyone supplied).
+            # So just treat them all as "decline to state."
+            row['gender'] = 'declined to state'

@@ -41,7 +41,8 @@ HEADER_SPEC = [
 ]
 HEADER_TYPES = {h[0]: h[1] for h in HEADER_SPEC}
 
-if __name__ == '__main__':
+
+def parse_tsv():
     data = codecs.open('gcd-survey.tsv', encoding='utf-8')
     lines = data.readlines()
 
@@ -71,6 +72,11 @@ if __name__ == '__main__':
         fields.process_gender(row)
 
         rows.append(row)
+    return rows
+
+
+if __name__ == '__main__':
+    rows = parse_tsv()
 
     make_social_label = functools.partial(make_label, label_map={
         True: 'Non Social', False: 'Social'})

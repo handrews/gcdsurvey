@@ -1,3 +1,6 @@
+// Returning to JavaScript after several years away.
+// Probably not pretty.  Or modern.
+
 // Load the Visualization API and the charting packages.
 google.charts.load('current', {packages: ['corechart',
                                           'sankey',
@@ -16,6 +19,9 @@ function drawChart() {
     var pie;
     var stack;
     Object.keys(rawData).forEach(function(chartName) {
+        // Look for the types of charts that we know about and
+        // draw them into the target div specified in each chart's
+        // data bundle.
         chartConfig = rawData[chartName];
         if (rawData[chartName].type === 'pie') {
             pie = new google.visualization.PieChart(
@@ -39,10 +45,9 @@ function drawChart() {
                 });
         }
     });
-    // Set up the unmodified data as a DataTable.
+
+    // Set up the unmodified data as a DataTable to display all data.
     var data = new google.visualization.DataTable(GCDRawData);
-                                
-    // Whole data table
     var table = new google.visualization.Table(
         document.getElementById('raw_table_div'));
     table.draw(data);

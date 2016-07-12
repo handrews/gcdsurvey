@@ -36,6 +36,17 @@ class GoogleDataSet(object):
     def __init__(self, dataset):
         self._raw_dataset = list(dataset)
 
+    def _get_counts(self, filter_by):
+        counts = collections.Counter()
+        for r in self._raw_dataset:
+            if filter_by(r):
+                if self._column_callable:
+                    v = self._column_callable(r)
+                else:
+                    v = r[self._count_column]
+                counts.update((v,))
+        return counts
+
     def _make_table(self, spec, processed_rows):
         dt = gviz_api.DataTable(spec)
         dt.LoadData(processed_rows)
@@ -75,18 +86,6 @@ class MultiCountDataSet(GoogleDataSet):
         self._count_column = count_column
         self._column_callable = column_callable
         self._data_spec = None
-
-    # XXX: DUPLICATE from CountDataSet, inheritance or what?
-    def _get_counts(self, filter_by):
-        counts = collections.Counter()
-        for r in self._raw_dataset:
-            if filter_by(r):
-                if self._column_callable:
-                    v = self._column_callable(r)
-                else:
-                    v = r[self._count_column]
-                counts.update((v,))
-        return counts
 
     def get_data_table(self,
                        filter_type_name='',
@@ -133,24 +132,6 @@ class CountDataSet(GoogleDataSet):
             (make_label(self._count_column), 'string'),
             ('Count', 'number'),
         ]
-
-        # Even if we don't need all_counts, we do need to know the full
-        # set of distinct elements so that we can set counts to zero
-        # when they are filtered out entirely by a filter.
-        # The keys in the counter are the values that we are counting.
-        # self._all_counts = self._get_counts()
-        # self._all_values = self._all_counts.keys()
-
-    def _get_counts(self, filter_by):
-        counts = collections.Counter()
-        counts.update([
-            # flake8 loses its mind on wraped ternary ifs, so turn it off.
-            self._column_callable(r) if self._column_callable    # noqa
-                                     else r[self._count_column]  # noqa
-            for r in self._raw_dataset
-            if filter_by(r)
-        ])
-        return counts
 
     def get_data_table(self,
                        filter_by=lambda r: True,

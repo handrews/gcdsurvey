@@ -46,6 +46,10 @@ REGIONS = {
     '': 'unspecified',
 }
 
+# NOTE: Technically the country code for the UK is 'gb', but I am apparently
+#       incapable of remembering that while looking at the raw data chart
+#       so here we use the code 'uk' (which is reserved anyway due to being
+#       the UK's top-level domain suffix).
 COUNTRIES_BY_CODE = {
     "gw": "Guinea-Bissau",
     "gu": "Guam",
@@ -58,7 +62,7 @@ COUNTRIES_BY_CODE = {
     "gf": "French Guiana",
     "ge": "Georgia",
     "gd": "Grenada",
-    "gb": "United Kingdom",
+    "uk": "United Kingdom",
     "ga": "Gabon",
     "gn": "Guinea",
     "gm": "Gambia",
@@ -248,7 +252,7 @@ COUNTRIES_BY_CODE = {
     "ne": "Niger",
     "nf": "Norfolk Island",
     "ng": "Nigeria",
-    "nz": "New Zealand (Aotearoa)",
+    "nz": "New Zealand",
     "sh": "St. Helena",
     "zr": "Zaire",
     "vn": "Viet Nam",
@@ -278,9 +282,9 @@ COUNTRIES_BY_CODE = {
     "km": "Comoros",
     "st": "Sao Tome and Principe",
     "sk": "Slovak Republic",
-    "kr": "Korea (South)",
+    "kr": "South Korea",
     "si": "Slovenia",
-    "kp": "Korea (North)",
+    "kp": "North Korea",
     "kw": "Kuwait",
     "sn": "Senegal",
     "sm": "San Marino",
@@ -568,19 +572,24 @@ class Line(object):
         self.gender = gender.lower().strip(' .')
         self.contact = contact
         self.extra = extra
-        self.pro = int(pro) if pro == '1' else ''
-        self.con = int(con) if con == '1' else ''
-        self.search = int(search) if search == '1' else ''
-        self.api = int(api) if api == '1' else ''
-        self.indexing = int(indexing) if indexing == '1' else ''
-        self.todo = int(todo) if todo == '1' else ''
-        self.digital = int(digital) if digital == '1' else ''
-        self.timeline = int(timeline) if timeline == '1' else ''
-        self.bonds = int(bonds) if bonds == '1' else ''
-        self.creators = int(creators) if creators == '1' else ''
-        self.characters = int(characters) if characters == '1' else ''
-        self.site = int(site) if site == '1' else ''
-        self.current = int(current) if current == '1' else ''
+
+        # These flags were an attempt to make quantitative sense out of
+        # the free-form responses.  It ended up being rather half-baked
+        # and the only one we use at this time is search, which was
+        # by far the most common topic mentioned.
+        self.pro = True if pro == '1' else None
+        self.con = True if con == '1' else None
+        self.search = True if search == '1' else None
+        self.api = True if api == '1' else None
+        self.indexing = True if indexing == '1' else None
+        self.todo = True if todo == '1' else None
+        self.digital = True if digital == '1' else None
+        self.timeline = True if timeline == '1' else None
+        self.bonds = True if bonds == '1' else None
+        self.creators = True if creators == '1' else None
+        self.characters = True if characters == '1' else None
+        self.site = True if site == '1' else None
+        self.current = True if current == '1' else None
 
     def process_why(self, row):
         why = self.why.replace('comics, creators, publishers, etc.',
@@ -692,7 +701,12 @@ class Line(object):
             else:
                 sys.stderr.write('Unknown language: "%s"\n' % lang)
                 language_set.add('zz')
+
+        # Note that using True and None is easier to read in the raw data
+        # table than using True and False.
+        row['no_english'] = None if 'en' in language_set else True
         row['languages'] = ', '.join(language_set)
+        row['english_only'] = True if row['languages'] == 'en' else None
 
     def process_country(self, row):
         # The keys in COUNTRIES are tuples of names, so we have to

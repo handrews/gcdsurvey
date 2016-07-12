@@ -17,6 +17,7 @@ from charts import make_label, CountDataSet, MultiCountDataSet
 # each line, and then create a list matching this order at the very end
 # to avoid maintaining parallel arrays.
 HEADER_SPEC = [
+    ('basic_why', 'string'),
     ('personal', 'boolean'),
     ('writing', 'boolean'),
     ('academics', 'boolean'),
@@ -27,6 +28,7 @@ HEADER_SPEC = [
     ('recent', 'boolean'),
     ('older', 'boolean'),
     ('preferred', 'boolean'),
+    ('basic_social', 'string'),
     ('posts_to_lists', 'boolean'),
     ('posts_to_fb', 'boolean'),
     ('follows_lists', 'boolean'),
@@ -82,18 +84,52 @@ def parse_tsv(lines):
     return rows
 
 
-def make_social_tables():
-    make_social_label = functools.partial(make_label, label_map={
-        True: 'Non Social', False: 'Social'})
+# These are effectively function definitions so they are declared at
+# file scope rather than in a function as normal variables would be.
+make_preference_label = functools.partial(make_label, label_map={
+    True: 'Prefers the GCD',
+    None: 'Uses the GCD and other sites',
+    False: 'Prefers other sites',
+})
 
 
-def make_age_filters():
-    # Note: You cannot create lambdas in a loop, as they will all capture
-    # the final iteration value of the loop variable.  Because closures.
-    age_filters = [('All', lambda r: True)]
-    age_filters.append(('< 40', lambda r: r['age'] < 40))
-    age_filters.append(('40+', lambda r: r['age'] >= 40))
-    return age_filters
+def make_social_tables(output):
+    # make_social_label = functools.partial(make_label, label_map={
+    #     True: 'Non Social', False: 'Social'})
+
+    social_filters = [
+        ('All', lambda r: True),
+        ('Active', lambda r: r['basic_social'] == 'active'),
+        ('Follows', lambda r: r['basic_social'] == 'follows'),
+        ('Not Social', lambda r: r['basic_social'] == 'not social'),
+    ]
+
+    pref_by_social_counts = MultiCountDataSet(rows, 'preferred')
+    pref_by_social_table = pref_by_social_counts.get_data_table(
+        'Social', filters=social_filters, label_with=make_preference_label)
+
+    output['Database Preference by Social Engagement'] = {
+        'target': 'preference_by_social',
+        'data': pref_by_social_table,
+        'type': 'stack',
+    }
+
+    reason_ordering = {
+        'interactive': 1,
+        'researcher': 2,
+        'personal only': 3,
+        'unknown': 4,
+    }
+    why_by_social_counts = MultiCountDataSet(rows, 'basic_why')
+    why_by_social_table = why_by_social_counts.get_data_table(
+        'Social', filters=social_filters,
+        sort_by=lambda a, b: reason_ordering[a] - reason_ordering[b])
+
+    output['Basic Reason for Visiting by Social Engagement'] = {
+        'target': 'why_by_social',
+        'data': why_by_social_table,
+        'type': 'stack',
+    }
 
 
 def make_gender_tables(output):
@@ -147,12 +183,10 @@ def make_country_tables(output):
                          'type': 'pie'}
 
 
-def make_prefs_by_age_table(output, age_filters):
-    make_preference_label = functools.partial(make_label, label_map={
-        True: 'Prefers the GCD',
-        None: 'Uses the GCD and other sites',
-        False: 'Prefers other sites',
-    })
+def make_prefs_by_age_table(output):
+    age_filters = [('All', lambda r: True),
+                   ('< 40', lambda r: r['age'] < 40),
+                   ('40+', lambda r: r['age'] >= 40)]
 
     pref_by_age_counts = MultiCountDataSet(rows, 'preferred')
     pref_by_age_table = pref_by_age_counts.get_data_table(
@@ -182,11 +216,10 @@ if __name__ == '__main__':
 
     js_data = {}
 
-    age_filters = make_age_filters()
-
     make_gender_tables(js_data)
     make_country_tables(js_data)
-    make_prefs_by_age_table(js_data, age_filters)
+    make_social_tables(js_data)
+    make_prefs_by_age_table(js_data)
 
     raw_data = make_raw_table()
 

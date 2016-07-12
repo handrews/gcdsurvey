@@ -594,16 +594,34 @@ class Line(object):
     def process_why(self, row):
         why = self.why.replace('comics, creators, publishers, etc.',
                                'comics').split(', ')
-        v_index = 0
+        # Since the text values from the multi-choice question are
+        # always in the same order, this just walks the complete and
+        # actual lists in parallel and marks off any text value that
+        # is seen.  The remainder is put in 'other reasons'.
+        value_index = 0
         why_index = 0
-        while v_index < len(WHY_VALUES) and why_index < len(why):
-            if why[why_index] == WHY_VALUES[v_index]:
-                row[WHY_LABELS[WHY_VALUES[v_index]]] = True
+        while value_index < len(WHY_VALUES) and why_index < len(why):
+            if why[why_index] == WHY_VALUES[value_index]:
+                row[WHY_LABELS[WHY_VALUES[value_index]]] = True
                 why_index += 1
-            v_index += 1
+            value_index += 1
 
         if why_index < len(WHY_VALUES) - 1:
             row['other_reason'] = ', '.join(why[why_index:])
+
+        # The basic_why breaks this down into three mutually exclusive
+        # categories.  Note that there is a precedence, so if someone
+        # indexes and researches for writing, they will show up as an
+        # "interactive" user as that is a more engaged state than a
+        # "researcher" user.
+        if row['indexing'] or row['collecting']:
+            row['basic_why'] = 'interactive'
+        elif row['academics'] or row['writing']:
+            row['basic_why'] = 'researcher'
+        elif row['personal']:
+            row['basic_why'] = 'personal only'
+        else:
+            row['basic_why'] = 'unknown'
 
     def process_era(self, row):
         if self.era.startswith('I am primarily interested in recent'):
@@ -671,6 +689,16 @@ class Line(object):
             # which is to be expected as checking all of the boxes doesn't
             # make sense.
             pass
+
+        if row['posts_to_lists'] or row['posts_to_fb']:
+            row['basic_social'] = 'active'
+        elif any((row['follows_fb'], row['follows_gplus'],
+                  row['follows_twitter'], row['follows_pinterest'])):
+            row['basic_social'] = 'follows'
+        elif row['non_social']:
+            row['basic_social'] = 'not social'
+        else:
+            row['basic_social'] = 'no answer'
 
     def process_languages(self, row):
         # Remove complicated stuff that people put in.

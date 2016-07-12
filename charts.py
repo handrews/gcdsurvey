@@ -53,16 +53,6 @@ class GoogleDataSet(object):
         return json.loads(dt.ToJSon())
 
 
-def get_basic_reason(row):
-    if row['indexing'] or row['collecting']:
-        return 'interacting'
-    if row['writing'] or row['academics']:
-        return 'researching'
-    # TODO: Handle weird bits
-    else:
-        return 'personal only'
-
-
 class MultiCountDataSet(GoogleDataSet):
     # The data structure looks like this:
     #

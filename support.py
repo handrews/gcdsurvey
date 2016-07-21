@@ -692,8 +692,9 @@ class Line(object):
 
         if row['posts_to_lists'] or row['posts_to_fb']:
             row['basic_social'] = 'active'
-        elif any((row['follows_fb'], row['follows_gplus'],
-                  row['follows_twitter'], row['follows_pinterest'])):
+        elif any((row['follows_lists'], row['follows_fb'],
+                  row['follows_gplus'], row['follows_twitter'],
+                  row['follows_pinterest'])):
             row['basic_social'] = 'follows'
         elif row['non_social']:
             row['basic_social'] = 'not social'
